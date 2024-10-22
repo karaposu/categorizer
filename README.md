@@ -1,7 +1,7 @@
-# LLM Enhanced Categorizer (LLMEC)
+# Categorizer
 
 
-## LEC is simple tool which you can use to categorise your string records into predefined -nested- categories using the power of LLMs. 
+## Categorizer is a simple tool which you can use to categorise your string records into predefined -nested- categories using the power of LLMs. 
 
 - upload your categories and subcategories ( read from yaml file or create them on the fly )
 - initialize LEC. You can use different modes and your own task-specific prompts if you like

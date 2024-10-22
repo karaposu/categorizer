@@ -2,12 +2,12 @@ from doctest import debug
 
 # this is record_manager.py
 import pandas as pd
-from llmec.record import Record
-from llmec.categorization_engine import  CategorizationEngine
+from categorizer.record import Record
+from categorizer.categorization_engine import  CategorizationEngine
 import logging
 logger = logging.getLogger(__name__)
 from tqdm import tqdm
-from llmec.metapattern_manager import MetaPatternManager
+from categorizer.metapattern_manager import MetaPatternManager
 
 
 class RecordManager:
@@ -24,7 +24,7 @@ class RecordManager:
         self.categorization_engine = CategorizationEngine(subcategory_level=2)
 
 
-        meta_patterns_yaml_path= 'llmec/bank_patterns.yaml'
+        meta_patterns_yaml_path= 'categorizer/bank_patterns.yaml'
 
         self.mpm = MetaPatternManager(meta_patterns_yaml_path)
 
@@ -214,7 +214,7 @@ def main():
     import pandas as pd
     import yaml
 
-    sample_records_path= "llmec/sample_records.yaml"
+    sample_records_path= "categorizer/sample_records.yaml"
 
     # Load the YAML file
     with open(sample_records_path, 'r') as file:
@@ -228,7 +228,7 @@ def main():
 
     # dummy_df = pd.DataFrame(data)
 
-    rm.load_records(df, categories_yaml_path='llmec/categories.yaml')
+    rm.load_records(df, categories_yaml_path='categorizer/categories.yaml')
 
     one=rm.records[0]
 

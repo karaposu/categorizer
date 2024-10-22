@@ -29,7 +29,7 @@ class MyLLMService(BaseLLMService):
             # logger=logger,
             logger=logging.getLogger(__name__),
             default_model_name="gpt-4o-mini",
-            yaml_file_path='prompts.yaml',
+            yaml_file_path='categorizer/prompts.yaml',
             max_rpm=60,
             max_concurrent_requests=max_concurrent_requests,
         )

@@ -1,0 +1,409 @@
+main:
+
+
+
+  
+  - name: "list_of_classes"
+    statement_suffix: "Here is"
+    question_suffix:  "What is "
+    placeholder_proclamation: " list of classes "
+    placeholder : "list_of_classes"
+
+  - name: "parent_category"
+    statement_suffix: "Here is"
+    question_suffix: "What is "
+    placeholder_proclamation: "parent category"
+    placeholder: "parent_category"
+
+
+  - name: "string_record_to_be_classified"
+    statement_suffix: "Here is"
+    question_suffix: "What is "
+    placeholder_proclamation: "string record to be classified"
+    placeholder: "string_record_to_be_classified"
+
+  - name: "category_task_description"
+    info: ""
+    placeholder_proclamation: >
+      Task Description:
+      Identify the Category: Determine which of the categories the string belongs to.
+      Extra Information - Helpers:  There might be additional information under each subcategory labeled as 'helpers'. These helpers include descs for the taxonomy,  but
+      should be considered as extra information and not directly involved in the classification task
+      Instructions:
+      Given the string record, first identify the category of the given string using given category list,  (your final answer shouldnt include words like "likely").
+      Use the 'Helpers' section for additional context.  And also at the end explain your reasoning in a very short way. 
+      Make sure category is selected from given categories and matches 100%
+       Examples:
+       Record: "Jumper Cable"
+       lvl1: interconnectors
+      
+       Record: "STM32"
+       lvl1: microcontrollers
+
+  - name: "categorizer"
+    info: >
+        Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as ```json. ) without any additional comments or inferred information:  {{ "lvl": here_is_selected_category }}"
+
+
+  - name: "refine_command"
+    info: " I want you to accurately extract the information by identifying the Category information from the given text"
+
+
+  - name: "answer_to_be_refined"
+    statement_suffix: "Here is "
+    question_suffix: "Give me "
+    placeholder_proclamation: text answer which included main desired information as well as some additional information
+    placeholder: "answer_to_be_refined"
+
+  - name: "semantic_element_for_extraction"
+    statement_suffix: "Here is "
+    question_suffix: "Give me "
+    placeholder_proclamation: semantic element which should be used for extraction
+    placeholder: "semantic_element_for_extraction"
+
+  - name: "answer_refiner"
+    info: >
+      from the Given the text answer, isolate and extract the semantic element.
+      Provide the answer strictly in the following JSON format, do not combine anything, remove all introductory or explanatory text that is not part of the SQL code
+      
+       'code':  'here_is_pure_code'
+
+
+
+#  order = ["database_description", "user_input", "identify_relevant_tables", "list_of_relevant_tables_output"]
+
+
+
+command_prompts:
+
+  - name: "list_of_relevant_tables_output"
+    info: >
+      given user input and documentation, extract all relevant table names. (extract all of them)
+      Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as json or SQL ) without any additional comments or inferred information:
+      {{
+            'table1': 'here_is_table_name'
+            'table2': 'here_is_table_name'
+            'table3': 'here_is_table_name'
+      }}
+
+#  - name: "list_of_relevant_tables_output"
+#    info: >
+#      given user input and documentation, extract all relevant table names. (extract all of them)
+#      Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as json or SQL ) without any additional comments or inferred information:
+#      {
+#            'tables': ['here_is_table_name', 'here_is_table_name', 'here_is_table_name', 'here_is_table_name' ]
+#
+#      }-
+
+#  - name: "list_of_relevant_tables_output"
+#    info: >
+#      Given the user input and documentation, extract all relevant table names.
+#      Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as json or SQL ) without any additional comments or inferred information:
+#      {
+#          "tables": ["here_is_table_name", "here_is_table_name", "here_is_table_name", "here_is_table_name"]
+#      }
+
+
+
+  - name: "answer_to_be_refined"
+    statement_suffix: "Here is "
+    question_suffix: "Give me "
+    placeholder_proclamation: text answer which included main desired information as well as some additional information
+    placeholder: "answer_to_be_refined"
+
+  - name: "semantic_element_for_extraction"
+    statement_suffix: "Here is "
+    question_suffix: "Give me "
+    placeholder_proclamation: semantic element which should be used for extraction
+    placeholder: "semantic_element_for_extraction"
+
+  - name: "answer_refiner"
+    info: >
+      from the Given the text answer, isolate and extract the semantic element.
+      Provide the answer strictly in the following JSON format, do not combine anything, remove all introductory or explanatory text that is not part of the SQL code
+    
+       'code':  'here_is_pure_code'
+
+
+
+
+  - name: "string_to_be_categorized"
+    statement_suffix: "Here is "
+    question_suffix: "Give me "
+    placeholder_proclamation: "string to be categorized"
+    placeholder: "string_to_be_categorized"
+
+
+
+
+
+
+output_formatting_prompts:
+
+    - name: "categorizer"
+      info: > 
+        Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as ```json. ) without any additional comments or inferred information:  {{ "lvl": "here_is_selected_category" }}"
+       
+
+  
+
+
+#
+#
+#
+#
+#
+#multi_level_refinement_prompt = '''
+#       Here is a text: {answer_to_be_refined}. I want you to accurately extract the information by identifying the Main Category and Subcategory from the given text.
+#       Provide the answer strictly in the following JSON format (without the 'json' text ) without any additional comments or inferred information:
+#       {{ "lvl1": "here_is_selected_category","lvl2": "here_is_selected_subcategory" }}
+#    '''
+#
+#system_prompt= '''
+#you are a categorizer tool. Given a target string and categories and subcategories, you find the best match for that target string
+#'''
+#
+#
+## refiner_template_one_lvl = '''
+##        Here is a text: {answer_to_be_refined}. I want you to accurately extract the information by identifying the Category information from the given text.
+##        Provide the answer strictly in the following JSON format (without the 'json' text ) without any additional comments or inferred information:
+##        {{ "lvl": "here_is_selected_category" }}
+##     '''
+#
+#single_level_refinement_prompt = '''
+#       Here is a text: {answer_to_be_refined}. I want you to accurately extract the information by identifying the Category information from the given text.
+#       Provide the answer strictly in the following JSON format (Do not include any Markdown or embedded JSON markers such as ```json. ) without any additional comments or inferred information:
+#       {{ "lvl": "here_is_selected_category" }}
+#    '''
+#
+#
+#
+##
+## refiner_batch_template = '''
+##
+##        Here is a text: {answer_to_be_refined}. it contains answer to more than one questions. I want you to accurately extract the information by identifying the Main Category (lv1) and Subcategory (lvl2) from the given text for each answer.
+##        Provide the answers strictly in the following JSON format in same order and without any additional comments or inferred information:
+##        {{ "category": "here_is_selected_category_for_answer_1", "subcategory": "here_is_selected_subcategory_for_answer_1"}}
+##        and repeat this same format for all other answers. output should have same number of above like output as the number of answers in input text.
+##
+##     '''
+#
+#batch_multi_level_refinement_prompt = '''
+#
+#       Here is a text: {answer_to_be_refined}. it contains answer to more than one questions. I want you to accurately extract the information by identifying the Main Category (lv1) and Subcategory (lvl2) from the given text for each answer.
+#       Provide the answers strictly in the following JSON format in same order and without any additional comments or inferred information:
+#       {{ "lvl1": "here_is_selected_category_for_answer_1", "lvl2": "here_is_selected_subcategory_for_answer_1"}}
+#       and repeat this same format for all other answers. output should have same number of above like output as the number of answers in input text.
+#
+#    '''
+#
+#refiner_batch_of_3_template = '''
+#
+#       Here is a text: {answer_to_be_refined}. it contains answers to 3 classification questions. I want you to accurately extract the information by identifying the Main Category and Subcategory from the given text for each answer.
+#       Provide the answers strictly in the following JSON format in same order and without any additional comments or inferred information:
+#       {{ "category": "here_is_selected_category_for_answer_1", "subcategory": "here_is_selected_subcategory_for_answer_1"}}
+#       {{ "category": "here_is_selected_category_for_answer_2", "subcategory": "here_is_selected_subcategory_for_answer_2"}}
+#       {{ "category": "here_is_selected_category_for_answer_3", "subcategory": "here_is_selected_subcategory_for_answer_3"}}
+#
+#
+#    '''
+#
+#
+#batch_multi_level_category_prompt ='''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Main Category: Determine which of the main categories (e.g., Food & Dining, Utilities, etc.) the string belongs to.
+#   Determine the Subcategory: Once the main category is identified, determine the specific subcategory within that main category (e.g., within Food & Dining, identify whether it is Groceries, Restaurants, Coffee, or Takeout).
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the concatenated string records, split them using the delimiter "/",
+#   Understand how many records exists,
+#   First, identify the main category for each record, then the specific subcategory within that main category,
+#   Classify each record individually, and then output the classifications in a single string using the same delimiter " / " for easy parsing.
+#   Your final answer should not include words like "likely".
+#   Use the 'rules' section for additional context. Provide a very short explanation for each classification. Make sure the subcategory is selected from the given subcategories and matches 100%.
+#
+#   Examples:
+#   Input: "Grocery shopping at Walmart / Monthly electricity bill / Restaurant Istanbul Mall "
+#   Output: "Food & Dining, Groceries / Utilities, Electricity and Water and Gas / Food & Dining, Restaurants "
+#
+#   Input: "Restoran Ramiz Minsk / Monthly electricity bill"
+#   Output: "Food & Dining, Restaurants / Utilities, Electricity and Water and Gas"
+#
+#   String record to classify:
+#   {record}
+#'''
+#
+#
+#multi_level_category_prompt = '''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Main Category: Determine which of the main categories (lvl1) (e.g., Food & Dining, Utilities, etc.) the string belongs to.
+#   Determine the Subcategory: Once the main category is identified, determine the specific subcategory (lvl2) within that main category (e.g., within Food & Dining, identify whether it is Groceries, Restaurants, Coffee, or Takeout).
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record, first identify the main category (lvl1), and then the specific subcategory (lvl2) within that main category (your final answer shouldnt include words like "likely").
+#   Use the 'rules' section for additional context.  And also at the end explain your reasoning in a very short way.
+#   Make sure subcategory is selected from given subcategories and matches 100%
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   lvl1: Food & Dining
+#   lvl2: Groceries
+#
+#   Record: "Monthly electricity bill"
+#   lvl1: Utilities
+#   lvl2: Electricity and Water and Gas
+#
+#    String record to classify:
+#   {record}
+#   '''
+#
+#
+#single_level_category_prompt = '''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Category: Determine which of the categories (e.g., Food & Dining, Utilities, etc.) the string belongs to.
+#   Extra Information - Helpers:  There might be additional information under each subcategory labeled as 'helpers'. These helpers include descs for the taxonomy,  but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record, first identify the category of the given string using given category list,  (your final answer shouldnt include words like "likely").
+#   Use the 'Helpers' section for additional context.  And also at the end explain your reasoning in a very short way.
+#   Make sure category is selected from given categories and matches 100%
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   lvl1: Food & Dining
+#
+#   Record: "Monthly electricity bill"
+#   lvl1: Utilities
+#
+#    String record to classify:
+#   {record}
+#   '''
+#
+#
+#base_lvl_categorizer_prompt_template = '''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Main Category: Determine which of the main categories the string belongs to.
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record,  identify the main category, (your final answer shouldnt include words like "likely").
+#   Use the 'rules' section for additional context.  And also at the end explain your reasoning in a very short way.
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   Main Category: Food & Dining
+#
+#
+#   Record: "Monthly electricity bill"
+#   Main Category: Utilities
+#
+#    String record to classify:
+#   {record}
+#   '''
+#
+#next_lvl_categorizer_prompt_template = '''
+#   subCategory Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#   given that this text is already classified as {already_classified_upper_class_info}
+#   Identify the next subCategory: Determine which of the subcategories the input belongs to.
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record, identify the subcategory, (your final answer shouldnt include words like "likely").
+#   Use the 'rules' section for additional context.  And also at the end explain your reasoning in a very short way.
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   SubCategory: Food & Dining
+#
+#
+#   Record: "Monthly electricity bill"
+#   SubCategory: Utilities
+#
+#    String record to classify:
+#   {record}
+#   '''
+#
+#
+#categorizer_lvl1_prompt_template = '''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Main Category: Determine which of the main categories the string belongs to.
+#   Determine the Subcategory: Once the main category is identified, determine the specific subcategory within that main category (e.g., within Food & Dining, identify whether it is Groceries, Restaurants, Coffee, or Takeout).
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record, first identify the main category, and then the specific subcategory within that main category (your final answer shouldnt include words like "likely").
+#   Use the 'rules' section for additional context.  And also at the end explain your reasoning in a very short way.
+#   Make sure subcategory is selected from given subcategories and matches 100%
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   Main Category: Food & Dining
+#   Subcategory: Groceries
+#
+#   Record: "Monthly electricity bill"
+#   Main Category: Utilities
+#   Subcategory: Electricity and Water and Gas
+#
+#    String record to classify:
+#   {record}
+#   '''
+#
+#
+#template1 = '''
+#   Category Structure:
+#
+#   {classes}
+#
+#   Task Description:
+#
+#   Identify the Main Category: Determine which of the main categories (e.g., Food & Dining, Utilities, etc.) the string belongs to.
+#   Determine the Subcategory: Once the main category is identified, determine the specific subcategory within that main category (e.g., within Food & Dining, identify whether it is Groceries, Restaurants, Coffee, or Takeout).
+#   Extra Information - Rules: There is additional information under each subcategory labeled as 'rules'. These rules include 'keyword' and 'text_based' but should be considered as extra information and not directly involved in the classification task.
+#
+#   Instructions:
+#   Given the string record, first identify the main category, and then the specific subcategory within that main category (your final answer shouldnt include words like "likely").
+#   Use the 'rules' section for additional context. Make sure subcategory is selected from given subcategories and matches 100%
+#
+#   Examples:
+#   Record: "Grocery shopping at Walmart"
+#   Main Category: Food & Dining
+#   Subcategory: Groceries
+#
+#   Record: "Monthly electricity bill"
+#   Main Category: Utilities
+#   Subcategory: Electricity and Water and Gas
+#
+#    String record to classify:
+#   {record}
+#   '''

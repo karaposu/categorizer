@@ -9,9 +9,7 @@ logger = logging.getLogger(__name__)
 from indented_logger import setup_logging, log_indent
 from .schemas import CategorizationResult
 
-
-
-from llmec.myllmservice import MyLLMService
+from categorizer.myllmservice import MyLLMService
 
 import re
 from time import time
