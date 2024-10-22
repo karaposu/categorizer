@@ -1,0 +1,9 @@
+langchain-community
+langchain-openai
+pyyaml
+tqdm
+python-magic
+python-dotenv
+pytest
+string2dict
+pandas

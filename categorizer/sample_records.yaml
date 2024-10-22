@@ -1,0 +1,177 @@
+records:
+
+
+
+  - text: "Gelen Transfer Enes Selim Aya"
+    keyword: "Migros"
+    record_id: None
+    cleaned_text: "Gelen Transfer "
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+
+  - text: "supermarket purchase from Migros 30 dollars 28.05.24"
+    keyword: "Migros"
+    record_id: None
+    cleaned_text: "supermarket purchase from Migros"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "restaurant - Hotdoner 30 dollars 28.05.24"
+    keyword: "Hotoner"
+    record_id: None
+    cleaned_text: "restaurant - Hotdoner"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+
+  - text: "coffee - kofeynye 30 dollars 28.05.24"
+    keyword: "kofeynye"
+    record_id: None
+    cleaned_text: "coffee - kofeynye"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "electricity bill 30 dollars 28.05.24"
+    keyword: "electricity"
+    record_id: None
+    cleaned_text: "electricity bill"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "internet bill - türk telekom mobil 30 dollars 28.05.24"
+    keyword: "türk telekom mobil"
+    record_id: None
+    cleaned_text: "internet bill - türk telekom mobil"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "pharmacy - eczane 30 dollars 28.05.24"
+    keyword: "eczane"
+    record_id: None
+    cleaned_text: "pharmacy - eczane"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "healthcare"
+
+
+
+
+    #  - date: "2024-06-18"
+    #    description: "pharmacy - eczane"
+    #    amount: "-120.00 TL"
+    #    currency: "TL"
+    #    category: "healthcare"
+    #    subcategory: "medications"
+    #
+
+#  - date: "2024-06-06"
+#    description: "internet bill - türk telekom mobil"
+#    amount: "-150.00 TL"
+#    currency: "TL"
+#    category: "utilities"
+#    subcategory: "internet and mobile"
+#
+#  - date: "2024-06-07"
+#    description: "rent"
+#    amount: "-2000.00 TL"
+#    currency: "TL"
+#    category: "accommodation"
+#    subcategory: "accommodation"
+#
+#  - date: "2024-06-08"
+#    description: "money received from john"
+#    amount: "5000.00 TL"
+#    currency: "TL"
+#    category: "incoming p2p transfers"
+#    subcategory: "incoming money"
+#
+#  - date: "2024-06-09"
+#    description: "money sent to alice"
+#    amount: "-1500.00 TL"
+#    currency: "TL"
+#    category: "outgoing p2p transfers"
+#    subcategory: "outgoing money"
+#
+#  - date: "2024-06-10"
+#    description: "atm withdrawal"
+#    amount: "-500.00 TL"
+#    currency: "TL"
+#    category: "cash withdrawal"
+#    subcategory: "cash withdrawal"
+#
+#  - date: "2024-06-11"
+#    description: "cash deposit"
+#    amount: "2000.00 TL"
+#    currency: "TL"
+#    category: "cash deposit"
+#    subcategory: "cash deposit"
+#
+#  - date: "2024-06-12"
+#    description: "gas station"
+#    amount: "-300.00 TL"
+#    currency: "TL"
+#    category: "transportation"
+#    subcategory: "fuel"
+#
+#  - date: "2024-06-13"
+#    description: "taxi - yandex.go"
+#    amount: "-100.00 TL"
+#    currency: "TL"
+#    category: "transportation"
+#    subcategory: "taxi"
+#
+#  - date: "2024-06-14"
+#    description: "flight ticket - havaist"
+#    amount: "-400.00 TL"
+#    currency: "TL"
+#    category: "transportation"
+#    subcategory: "travel tickets"
+#
+#  - date: "2024-06-15"
+#    description: "parking - ispark"
+#    amount: "-50.00 TL"
+#    currency: "TL"
+#    category: "transportation"
+#    subcategory: "public transportation"
+#
+#  - date: "2024-06-16"
+#    description: "car service"
+#    amount: "-250.00 TL"
+#    currency: "TL"
+#    category: "transportation"
+#    subcategory: "vehicle maintenance"
+#
+#  - date: "2024-06-17"
+#    description: "gym membership"
+#    amount: "-80.00 TL"
+#    currency: "TL"
+#    category: "personal care"
+#    subcategory: "fitness"
+#
+#  - date: "2024-06-18"
+#    description: "pharmacy - eczane"
+#    amount: "-120.00 TL"
+#    currency: "TL"
+#    category: "healthcare"
+#    subcategory: "medications"
+#
+#  - date: "2024-06-19"
+#    description: "shopping - clothes"
+#    amount: "-400.00 TL"
+#    currency: "TL"
+#    category: "retail purchases"
+#    subcategory: "clothes"
+#
+#  - date: "2024-06-20"
+#    description: "online purchase - apple"
+#    amount: "-600.00 TL"
+#    currency: "TL"
+#    category: "retail purchases"
+#    subcategory: "technology items"
+#
+#  - date: "2024-06-21"
+#    description: "concert tickets"
+#    amount: "-150.00 TL"
+#    currency: "TL"
+#    category: "leisure and activities in real life"
+#    subcategory: "concerts"
