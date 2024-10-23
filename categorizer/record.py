@@ -37,6 +37,7 @@ class Record:
         self.flag_for_further_inspection = False
         self.metapatterns = None
         self.available_categories = []
+        self.selected_categories = []
 
         # Load categories from YAML if provided
         if categories:
@@ -81,7 +82,7 @@ class Record:
             f"  Associated With: {self.associated_with}\n"
             f"  Rationale Dict: {self.rationale_dict}\n"
             f"  Refiner Output Dict: {self.refiner_output_dict}\n"
-            f"  Selected Categories: {category_summary}\n"
+            # f"  Selected Categories: {category_summary}\n"
             f"  Validated By: {self.validated_by}\n"
             f"  Flag for Further Inspection: {self.flag_for_further_inspection}\n"
             f")"
@@ -181,7 +182,8 @@ class Record:
         return " / ".join(f"{str(key)}: {value}" for key, value in d.items())
 
     def to_dict(self):
-        return {
+        data = {
+            'ready': self.ready,
             'record_id': self.record_id,
             'record': self.text,
             'category_dict': getattr(self, 'category_dict', None),
@@ -189,7 +191,17 @@ class Record:
             'refiner_output': getattr(self, 'refiner_output', None),
             'associated_with': self.associated_with,
             'categorized_by': self.categorized_by,
+            # Include other fields as needed
         }
+
+        # Dynamically include level attributes based on self.depth
+        if self.depth:
+            for level in range(1, self.depth + 1):
+                level_attr = getattr(self, f'lvl{level}', None)
+                # Include the name of the category if it's set, else None
+                data[f'lvl{level}'] = level_attr.name if level_attr else None
+
+        return data
 
     def generate_merged_refiner_output(self):
         self.refiner_output = self.merge_dict_items_into_str(self.refiner_output_dict)
