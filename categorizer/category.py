@@ -81,7 +81,7 @@ class Category:
 
 def create_categories_from_yaml(yaml_data, level=1, parent=None, logger=None):
     categories = []
-
+    
     for category_data in yaml_data:
         for category_name, category_info in category_data.items():
             helpers = category_info.get('helpers', {})

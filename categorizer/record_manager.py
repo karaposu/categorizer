@@ -135,7 +135,7 @@ class RecordManager:
 def main():
     from indented_logger import setup_logging, log_indent
     setup_logging(level=logging.DEBUG, include_func=True)
-
+    
     rm = RecordManager(debug=True)
 
     import yaml
@@ -152,7 +152,7 @@ def main():
 
     # Load records into RecordManager
     rm.load_records(df, categories_yaml_path='categorizer/categories.yaml')
-
+    
     # Categorize records
     result_df = rm.categorize_records()
 
