@@ -1,4 +1,4 @@
-```markdown
+
 # Categorizer
 
 ## Categorizer is a simple python package which you can use to categorize your string records into predefined -nested- categories using the power of LLMs. 
@@ -115,7 +115,7 @@ pip install .
 
 ---
 
-## Quick Start
+## Quick Start to Internals
 
 ### 1. CategorizationEngine (Standalone)
 
@@ -141,33 +141,3 @@ print("Level 2:", rec.lvl2.name)
 print("By:", rec.categorized_by)
 ```
 
-### 2. RecordManager (Batch)
-
-```python
-import pandas as pd
-from categorizer.record_manager import RecordManager
-
-# Sample DataFrame
-df = pd.DataFrame([
-    {"text": "Dinner at Gray House café", "record_id": 1},
-    {"text": "Electricity bill from VVC",   "record_id": 2},
-])
-
-# Initialize manager
-rm = RecordManager(debug=True)
-
-# Load & categorize
-rm.load_records(df, categories_yaml_path="categorizer/categories.yaml")
-result_df = rm.categorize_records()
-
-print(result_df)
-```
-
----
-
-
-
-## License
-
-MIT © Enes Kuzucu  
-```
