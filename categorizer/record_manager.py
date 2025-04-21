@@ -13,6 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Configure the logger
 logger = logging.getLogger(__name__)
 
+#python -m categorizer.record_manager
+
 
 class RecordManager:
     def __init__(self, debug=False):
@@ -197,6 +199,7 @@ class RecordManager:
 
 def main():
     from indented_logger import setup_logging, log_indent
+    from time import time
     setup_logging(level=logging.DEBUG, include_func=True)
     
     rm = RecordManager(debug=True)
@@ -217,11 +220,17 @@ def main():
     rm.load_records(df, categories_yaml_path='categorizer/categories.yaml')
     
     # Categorize records
-    result_df = rm.categorize_records()
+    t0=time()
+    # result_df = rm.categorize_records()
+    result_df = rm.categorize_records_in_batches(record_batch_size=7)
+
+    t1=time()
 
     # Print the resulting DataFrame
     print("Categorization results:")
     print(result_df)
+    
+    print("total_time: ", t1-t0)
 
 
 if __name__ == '__main__':
