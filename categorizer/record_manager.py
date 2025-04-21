@@ -10,6 +10,11 @@ from indented_logger import setup_logging, log_indent
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from progress_reporter import ProgressReporter
+from typing import Optional
+from time import time
+from datetime import datetime
+
 # Configure the logger
 logger = logging.getLogger(__name__)
 
@@ -70,20 +75,80 @@ class RecordManager:
         for idx, text in enumerate(record_inputs):
             record = Record.from_string(text=text, record_id=ids[idx], categories=categories_yaml_path)
             self.records.append(record)
-
+    
     def _load_from_string(self, record_input: str, record_id, categories_yaml_path: str):
        # self.logger.debug("Loading record from string")
         record = Record.from_string(text=record_input, record_id=record_id, categories=categories_yaml_path)
         self.records.append(record)
 
     @log_indent
-    def categorize_records(self):
-        for idx, record in enumerate(self.records):
-            logger.debug(f"{idx}/{len(self.records)}:")
-            self.categorize_a_record(record)
+    def categorize_records(
+        self,
+        reporter: Optional[ProgressReporter] = None
+    ) -> pd.DataFrame:
+        """
+        Serially categorize each record, reporting progress via the provided reporter.
 
-        df = self.get_records_dataframe()
-        return df
+        Args:
+            reporter: an object implementing ProgressReporter protocol. If None, no progress is reported.
+
+        Returns:
+            DataFrame of all categorized records.
+        """
+        total = len(self.records)
+        logger.debug("Starting categorization of records")
+        logger.debug(f"Total records = {total}")
+
+        # Handle empty input
+        if total == 0:
+            logger.warning("No records to process.")
+            if reporter:
+                reporter.update_processing_status(new_status="completed")
+            return self.get_records_dataframe()
+
+        # Kick off the reporter
+        if reporter:
+            reporter.start(total)
+            reporter.log_zero_progress()
+
+        failures = 0
+        start_ts = time()
+
+        # Process each record in turn
+        for idx, rec in enumerate(self.records, start=1):
+            try:
+                self.categorize_a_record(
+                    rec,
+                    use_metapattern=False,
+                    use_keyword=True,
+                    use_cache=True
+                )
+            except Exception:
+                failures += 1
+            finally:
+                # Always report progress after each record
+                if reporter:
+                    reporter.log_progress(
+                        number_of_processed_records=idx,
+                        start_time=start_ts,
+                        total_records=total
+                    )
+
+        # Finalize the report
+        if reporter:
+            reporter.finish(total=total, failed_count=failures)
+
+        # Return the assembled DataFrame
+        return self.get_records_dataframe()
+    
+    # @log_indent
+    # def categorize_records(self):
+    #     for idx, record in enumerate(self.records):
+    #         logger.debug(f"{idx}/{len(self.records)}:")
+    #         self.categorize_a_record(record)
+
+    #     df = self.get_records_dataframe()
+    #     return df
 
     @log_indent
     def categorize_a_record(self, record, use_metapattern=False, use_keyword=False, use_cache=False):
@@ -199,7 +264,7 @@ class RecordManager:
 
 def main():
     from indented_logger import setup_logging, log_indent
-    from time import time
+  
     setup_logging(level=logging.DEBUG, include_func=True)
     
     rm = RecordManager(debug=True)
@@ -221,8 +286,14 @@ def main():
     
     # Categorize records
     t0=time()
+
+    from progress_reporter import LogReporter
+    reporter = LogReporter()
+
+    result_df = rm.categorize_records(reporter=reporter)
+
     # result_df = rm.categorize_records()
-    result_df = rm.categorize_records_in_batches(record_batch_size=7)
+    #result_df = rm.categorize_records_in_batches(record_batch_size=7)
 
     t1=time()
 
