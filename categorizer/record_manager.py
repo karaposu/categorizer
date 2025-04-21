@@ -8,6 +8,8 @@ from tqdm import tqdm
 from categorizer.metapattern_manager import MetaPatternManager
 from indented_logger import setup_logging, log_indent
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 # Configure the logger
 logger = logging.getLogger(__name__)
 
@@ -130,6 +132,67 @@ class RecordManager:
                 record.apply_cached_result(cached_record)
                 return True
         return False
+    
+    def categorize_records_in_batches(
+        self,
+        record_batch_size: int,
+        use_metapattern: bool = False,
+        use_keyword: bool = False,
+        use_cache: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Loop over all records in batches, delegating each batch to _process_batch().
+        """
+        total = len(self.records)
+        for start in range(0, total, record_batch_size):
+            end = min(start + record_batch_size, total)
+            batch = self.records[start:end]
+            self._process_batch(batch, start, end, total,
+                                use_metapattern, use_keyword, use_cache)
+
+        return self.get_records_dataframe()
+
+
+    def _process_batch(
+        self,
+        batch: list,
+        start: int,
+        end: int,
+        total: int,
+        use_metapattern: bool,
+        use_keyword: bool,
+        use_cache: bool,
+    ) -> None:
+        """
+        Categorize a single batch of records in parallel using threads.
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Processing records {start}–{end-1} of {total}")
+
+        # For I/O‑bound OpenAI calls, threads give high concurrency with low overhead
+        with ThreadPoolExecutor(max_workers=len(batch)) as executor:
+            # submit each record to its own thread
+            futures = {
+                executor.submit(
+                    self.categorize_a_record,
+                    record,
+                    use_metapattern,
+                    use_keyword,
+                    use_cache
+                ): record
+                for record in batch
+            }
+
+            # wait for completion and handle per‐record errors
+            for future in as_completed(futures):
+                record = futures[future]
+                try:
+                    future.result()
+                except Exception as e:
+                    logger.error(
+                        f"Error categorizing record {record.record_id}: {e}",
+                        exc_info=True
+                    )
 
 
 def main():

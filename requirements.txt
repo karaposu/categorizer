@@ -1,9 +1,16 @@
-langchain-community
-langchain-openai
-pyyaml
+llmservice
+pandas
 tqdm
 python-magic
 python-dotenv
-pytest
-string2dict
-pandas
+
+
+# langchain-community
+# langchain-openai
+# pyyaml
+# tqdm
+# python-magic
+# python-dotenv
+# pytest
+# string2dict
+# pandas
