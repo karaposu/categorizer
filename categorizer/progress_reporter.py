@@ -1,80 +1,86 @@
-# progress_reporter.py
+# categorizer/progress_reporter.py
 
 import logging
 import time
 from datetime import timedelta
-from typing import Protocol
-
+from typing import Protocol, Optional
 
 class ProgressReporter(Protocol):
-    """
-    Protocol for reporting progress during long‑running tasks.
-    Any concrete reporter must implement these methods.
-    """
-    def start(self, total_records: int) -> None:
-        ...
-
-    def log_zero_progress(self) -> None:
-        ...
-
-    def update_processing_status(self, new_status) -> None:
-        ...
-
-    def log_progress(
+    def update_processing_status(
         self,
-        number_of_processed_records: int,
-        start_time: float,
-        total_records: int
+        process_status:   Optional[str]  = None,  # e.g. "started", "progress", "completed"
+        processed:        Optional[int]  = None,  # how many done so far
+        total:            Optional[int]  = None,  # total to do
+        failed_count:     Optional[int]  = None,  # how many have failed
+        start_time:       Optional[float]= None,  # timestamp when processing began
     ) -> None:
-        ...
-
-    def finish(self, total: int, failed_count: int) -> None:
         ...
 
 
 class LogReporter(ProgressReporter):
     """
-    A concrete ProgressReporter that logs progress, ETA, and status updates.
+    Logs a unified status update whenever update_processing_status is called.
+    `process_status` drives whether this is a start, a progress tick, or completion.
     """
 
     def __init__(self, logger: logging.Logger = None):
-        self.logger = logger or logging.getLogger(__name__)
-        self.total = 0
-        self.start_ts = 0.0
+        self.logger    = logger or logging.getLogger(__name__)
+        self._start_ts = None
+        self._total    = None
 
-    def start(self, total_records: int) -> None:
-        self.total = total_records
-        self.start_ts = time.time()
-        self.logger.info(f"[Reporter] Starting processing of {self.total} records.")
-
-    def log_zero_progress(self) -> None:
-        self.logger.info(f"[Reporter] Progress: 0/{self.total} (0.0%)")
-
-    def update_processing_status(self, new_status) -> None:
-        self.logger.info(f"[Reporter] Status update: {new_status}")
-
-    def log_progress(
+    def update_processing_status(
         self,
-        number_of_processed_records: int,
-        start_time: float,
-        total_records: int
+        process_status:   Optional[str]   = None,
+        processed:        Optional[int]   = None,
+        total:            Optional[int]   = None,
+        failed_count:     Optional[int]   = None,
+        start_time:       Optional[float] = None,
     ) -> None:
-        elapsed = time.time() - start_time
-        pct = (number_of_processed_records / total_records) * 100
-        if number_of_processed_records > 0:
-            rate = elapsed / number_of_processed_records
-            remaining = rate * (total_records - number_of_processed_records)
-            eta = timedelta(seconds=int(remaining))
-        else:
-            eta = "N/A"
-        self.logger.info(
-            f"[Reporter] {number_of_processed_records}/{total_records} "
-            f"({pct:.1f}%), elapsed: {elapsed:.1f}s, ETA: {eta}"
-        )
+        now = time.time()
 
-    def finish(self, total: int, failed_count: int) -> None:
-        elapsed = time.time() - self.start_ts
-        self.logger.info(
-            f"[Reporter] Finished {total} records in {elapsed:.1f}s "
-            f"with {failed_count} failures."
-        )
+        # ---- Handle “started” ----
+        if process_status == "started":
+            # record start timestamp and total
+            self._start_ts = now
+            self._total    = total or 0
+            self.logger.info(f"[Reporter] Starting processing of {self._total} records.")
+            return
+
+        # ---- Handle “progress” ----
+        if process_status == "progress" and processed is not None and total is not None and start_time is not None:
+            elapsed = now - start_time
+            pct     = (processed / total) * 100 if total else 0
+            # ETA calculation
+            if processed > 0:
+                rate      = elapsed / processed
+                remaining = rate * (total - processed)
+                eta       = timedelta(seconds=int(remaining))
+            else:
+                eta = "N/A"
+            self.logger.info(
+                f"[Reporter] {processed}/{total} "
+                f"({pct:.1f}%), elapsed {elapsed:.1f}s, ETA {eta}"
+            )
+            return
+
+        # ---- Handle “completed” ----
+        if process_status == "completed":
+            st = start_time or self._start_ts or now
+            elapsed = now - st
+            self.logger.info(
+                f"[Reporter] Finished {total} records in {elapsed:.1f}s "
+                f"with {failed_count or 0} failures."
+            )
+            return
+
+        # ---- Fallback / custom status ----
+        # show whatever fields were passed
+        parts = []
+        if process_status:
+            parts.append(f"Status={process_status}")
+        if processed is not None and total is not None:
+            parts.append(f"{processed}/{total}")
+        if failed_count is not None:
+            parts.append(f"failures={failed_count}")
+        msg = "[Reporter] " + " ".join(parts) if parts else "[Reporter] update"
+        self.logger.info(msg)

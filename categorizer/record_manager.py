@@ -170,9 +170,6 @@ class RecordManager:
 
         return failures
     
-    
-
-
     @log_indent
     def categorize_records(
         self,
@@ -181,7 +178,8 @@ class RecordManager:
     ) -> pd.DataFrame:
         """
         Categorize all records, either in batches (threaded) if batch_size is set,
-        or one by one otherwise.  Progress is reported via `reporter`.
+        or one by one otherwise. Progress is reported via the single
+        update_processing_status(...) method.
         """
         total = len(self.records)
         logger.debug(f"Starting categorization: {total} record(s)")
@@ -190,35 +188,150 @@ class RecordManager:
         if total == 0:
             logger.warning("No records to process.")
             if reporter:
-                reporter.update_processing_status(new_status="completed")
+                reporter.update_processing_status(
+                    process_status="completed",
+                    processed=0,
+                    total=0,
+                    failed_count=0,
+                    start_time=time()
+                )
             return self.get_records_dataframe()
 
-        # Kick off reporter
-        if reporter:
-            reporter.start(total)
-            reporter.log_zero_progress()
-
+        # Record start
         start_ts = time()
-        # Choose path
-        if batch_size:
-            failures = self._categorize_in_batches(
-                batch_size=batch_size,
-                reporter=reporter,
-                start_ts=start_ts,
-                total=total
-            )
-        else:
-            failures = self._categorize_one_by_one(
-                reporter=reporter,
-                start_ts=start_ts,
-                total=total
+        if reporter:
+            reporter.update_processing_status(
+                process_status="started",
+                total=total,
+                start_time=start_ts
             )
 
-        # Finish reporter
+        failures = 0
+        processed = 0
+
+        # --- BATCHED PATH ---
+        if batch_size:
+            for offset in range(0, total, batch_size):
+                batch = self.records[offset : offset + batch_size]
+                logger.debug(f"Processing batch {offset+1}–{offset+len(batch)} of {total}")
+
+                with ThreadPoolExecutor(max_workers=len(batch)) as execr:
+                    futures = {
+                        execr.submit(
+                            self.categorize_a_record,
+                            rec,
+                            False,  # use_metapattern
+                            True,   # use_keyword
+                            True    # use_cache
+                        ): rec
+                        for rec in batch
+                    }
+
+                    for future in as_completed(futures):
+                        processed += 1
+                        rec = futures[future]
+                        try:
+                            future.result()
+                        except Exception as e:
+                            failures += 1
+                            logger.error(
+                                f"Error categorizing record {rec.record_id}: {e}",
+                                exc_info=True
+                            )
+                        finally:
+                            if reporter:
+                                reporter.update_processing_status(
+                                    process_status="progress",
+                                    processed=processed,
+                                    total=total,
+                                    start_time=start_ts
+                                )
+
+        # --- SERIAL PATH ---
+        else:
+            for rec in self.records:
+                processed += 1
+                try:
+                    self.categorize_a_record(
+                        rec,
+                        use_metapattern=False,
+                        use_keyword=True,
+                        use_cache=True
+                    )
+                except Exception as e:
+                    failures += 1
+                    logger.error(
+                        f"Error categorizing record {rec.record_id}: {e}",
+                        exc_info=True
+                    )
+                finally:
+                    if reporter:
+                        reporter.update_processing_status(
+                            process_status="progress",
+                            processed=processed,
+                            total=total,
+                            start_time=start_ts
+                        )
+
+        # --- FINISH ---
         if reporter:
-            reporter.finish(total=total, failed_count=failures)
+            reporter.update_processing_status(
+                process_status="completed",
+                processed=processed,
+                total=total,
+                failed_count=failures,
+                start_time=start_ts
+            )
 
         return self.get_records_dataframe()
+
+
+    # @log_indent
+    # def categorize_records(
+    #     self,
+    #     batch_size: Optional[int] = None,
+    #     reporter: Optional[ProgressReporter] = None
+    # ) -> pd.DataFrame:
+    #     """
+    #     Categorize all records, either in batches (threaded) if batch_size is set,
+    #     or one by one otherwise.  Progress is reported via `reporter`.
+    #     """
+    #     total = len(self.records)
+    #     logger.debug(f"Starting categorization: {total} record(s)")
+
+    #     # Empty case
+    #     if total == 0:
+    #         logger.warning("No records to process.")
+    #         if reporter:
+    #             reporter.update_processing_status(new_status="completed")
+    #         return self.get_records_dataframe()
+
+    #     # Kick off reporter
+    #     if reporter:
+    #         reporter.start(total)
+    #         reporter.log_zero_progress()
+
+    #     start_ts = time()
+    #     # Choose path
+    #     if batch_size:
+    #         failures = self._categorize_in_batches(
+    #             batch_size=batch_size,
+    #             reporter=reporter,
+    #             start_ts=start_ts,
+    #             total=total
+    #         )
+    #     else:
+    #         failures = self._categorize_one_by_one(
+    #             reporter=reporter,
+    #             start_ts=start_ts,
+    #             total=total
+    #         )
+
+    #     # Finish reporter
+    #     if reporter:
+    #         reporter.finish(total=total, failed_count=failures)
+
+    #     return self.get_records_dataframe()
     
     
 
@@ -363,8 +476,8 @@ def main():
     
     reporter = LogReporter()
     
-    # result_df = rm.categorize_records(reporter=reporter)
-    result_df = rm.categorize_records(batch_size=7, reporter=reporter)
+    result_df = rm.categorize_records(reporter=reporter)
+    # result_df = rm.categorize_records(batch_size=7, reporter=reporter)
 
     t1=time()
 
