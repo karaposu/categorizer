@@ -316,9 +316,10 @@ def main():
 
     
     reporter = LogReporter()
+    # reporter=None
     
     # result_df = rm.categorize_records(reporter=reporter)
-    result_df = rm.categorize_records(batch_size=7, reporter=reporter)
+    result_df = rm.categorize_records(batch_size=14, reporter=reporter)
     
     t1=time()
 

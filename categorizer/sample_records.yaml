@@ -53,6 +53,57 @@ records:
     associated_with: "QNB Finansbank Enpara"
     ground_truth: "healthcare"
 
+  - text: "Giden Transfer Enes Selim Aya"
+    keyword: "Migros"
+    record_id: None
+    cleaned_text: "Giden Transfer "
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+
+  - text: "a101 alisveris 20 dollar 29.05.24"
+    keyword: "a101"
+    record_id: None
+    cleaned_text: "a101 alisveris"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "BIM Istanbul 30 dollars"
+    keyword: "BIM"
+    record_id: None
+    cleaned_text: "BIM"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+
+  - text: "coffee - kofeynye 15 dollars 28.05.24"
+    keyword: "kofeynye"
+    record_id: None
+    cleaned_text: "coffee - kofeynye"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "water bill 13 dollars"
+    keyword: "water"
+    record_id: None
+    cleaned_text: "water bill"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "VODAFONE mobil 30 dollars 28.05.24"
+    keyword: "VODAFONE"
+    record_id: None
+    cleaned_text: "VODAFONE"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "food & dining"
+
+  - text: "pharmacy - eczane 20 dollars 28.05.24"
+    keyword: "eczane"
+    record_id: None
+    cleaned_text: "pharmacy - eczane"
+    associated_with: "QNB Finansbank Enpara"
+    ground_truth: "healthcare"
+
 
 
 
