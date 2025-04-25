@@ -167,7 +167,7 @@ class RecordManager:
         batch_size: int,
         reporter: Optional[ProgressReporter],
         start_ts: float,
-      
+    
     ) -> (int, int):
         failures = 0
         processed = 0
@@ -260,12 +260,12 @@ def main():
 
     setup_logging(level=logging.DEBUG, include_func=True)
     rm = RecordManager(debug=True)
-
+    
     with open("categorizer/sample_records.yaml") as f:
         data = yaml.safe_load(f)
     df = pd.DataFrame(data["records"])
     rm.load_records(df, categories_yaml_path="categorizer/categories.yaml")
-
+    
     reporter = LogReporter()
     # For serial:
     # result_df = rm.categorize_records(reporter=reporter)
