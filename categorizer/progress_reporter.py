@@ -42,17 +42,26 @@ class LogReporter(ProgressReporter):
     
     def __init__(self, logger: logging.Logger = None):
         self.logger     = logger or logging.getLogger(__name__)
-        self._start_ts  = None  # type: datetime
+        
+
+        self.start_ts=None
+        self.finished_ts=None
         self._total     = 0
         self._processed = 0
         self._failed    = 0
 
+
     def update_status(self, status: str) -> None:
+
         if status == "started":
-            # Record start timestamp in UTC
-            self._start_ts = datetime.now(timezone.utc)
+            self.start_ts = datetime.now(timezone.utc)
+           
+        elif status == "completed":
+            self.finished_ts = datetime.now(timezone.utc)
+           
         self.logger.info(f"[Reporter] Status: {status}")
 
+   
     def update_total(self, total: int) -> None:
         self._total = total
         self.logger.info(f"[Reporter] Total items to process: {total}")
@@ -69,5 +78,26 @@ class LogReporter(ProgressReporter):
         self.logger.info(f"[Reporter] Progress: {percentage:.1f}%")
 
     def update_remaining_time(self, remaining_time_seconds: float) -> None:
+
+        if remaining_time_seconds is None:
+            remaining_time_seconds=0
         eta = timedelta(seconds=int(remaining_time_seconds))
         self.logger.info(f"[Reporter] ETA: {eta}")
+
+    @staticmethod
+    def find_remaining_time(
+        start_time: datetime,
+        total_records: int,
+        processed: int
+    ) :
+        """
+        Linear ETA: (elapsed / processed) * (total - processed).
+        Returns remaining seconds, or None if cannot compute.
+        """
+        now = datetime.now(timezone.utc)
+        elapsed = (now - start_time).total_seconds()
+        if processed <= 0 or processed >= total_records:
+            return None
+        rate = elapsed / processed
+        return int(rate * (total_records - processed))
+
