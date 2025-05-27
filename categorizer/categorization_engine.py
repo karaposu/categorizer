@@ -12,12 +12,15 @@ from categorizer.myllmservice import MyLLMService
 logger = logging.getLogger(__name__)
 
 class CategorizationEngine:
-    def __init__(self, subcategory_level=1, debug=False):
+    def __init__(self, subcategory_level=1 ,myllmservice=None,  debug=False):
         self.subcategory_level = subcategory_level
         self.use_system_prompt = False
         self.debug = debug
-
-        self.myllmservice = MyLLMService()
+        if not myllmservice:
+             self.myllmservice = MyLLMService()
+        else:
+             self.myllmservice = myllmservice 
+             
         self.logger = logging.getLogger(__name__)
         self.llm_system_prompt = ""
 
@@ -30,7 +33,7 @@ class CategorizationEngine:
 
     @log_indent
     def categorize_record(self, record, use_metapattern=False, use_keyword=False):
-
+    
         if use_metapattern:
             self.categorize_with_metapattern(record)
 
@@ -43,17 +46,20 @@ class CategorizationEngine:
 
 
     def categorize_with_metapattern(self, record):
-        if record.metapatterns and record.metapatterns.get("classification_patterns"):
-            # self._debug("Inside categorize_with_metapattern")
-            logger.debug("Inside categorize_with_metapattern")
 
-            classification_patterns = record.metapatterns["classification_patterns"]
+        # logger.debug(f"     sfasdfadsf inside categorize_with_metapattern" )
+        if record.metapatterns and record.metapatterns.get("auto_categorization_patterns"):
+            # self._debug("Inside categorize_with_metapattern")
+            # logger.debug(f"     bbbbb  categorize_with_metapattern" )
+          
+
+            classification_patterns = record.metapatterns["auto_categorization_patterns"]
             categorization_result = self.categorize_record_with_meta_pattern(
                 record.text, classification_patterns
             )
 
             matched_pattern = categorization_result.matched_pattern
-            logger.debug(f"Matched pattern: {matched_pattern}")
+            # logger.debug(f"Matched pattern: {matched_pattern}")
 
             if categorization_result.success:
                 self._select_categories_from_pattern(record, matched_pattern)
@@ -163,12 +169,11 @@ class CategorizationEngine:
 
 
 
-
     def categorize_record_with_meta_pattern(self, text, classification_patterns):
         matched_pattern = next(
             (pattern for pattern in classification_patterns if re.search(pattern['pattern'], text)), None
         )
-
+        
         categorization_result = CategorizationResult(
             success=False,
             category_list=[],
@@ -225,17 +230,25 @@ class CategorizationEngine:
         classes_string = yaml.dump(classes, default_flow_style=False, Dumper=ExpandedDumper)
         generation_result = self.myllmservice.categorize_simple(text, classes_string)
         return generation_result
+    
 
     def _select_categories_from_pattern(self, record, pattern):
-        record.select_lvl_category(1, pattern['lvl1'], classified_by="metapattern")
-        for level in range(2, self.subcategory_level + 1):
-            lvl_key = f'lvl{level}'
-            if lvl_key in pattern:
-                record.select_lvl_category(level, pattern[lvl_key], classified_by="metapattern")
+        """
+        Copy every key that looks like 'lvlN' (lvl1, lvl2, …) from the
+        matched meta-pattern onto the Record, bypassing the
+        subcategory_level limit.
+        """
+        for key, value in pattern.items():
+            if key.startswith("lvl") and value:
+                # key is e.g. "lvl2" → extract the integer 2
+                lvl_num = int(key[3:])
+                record.select_lvl_category(lvl_num, value,
+                                           classified_by="metapattern")
 
+    
 def main():
     from indented_logger import setup_logging, log_indent, smart_indent_log
-
+    
     setup_logging(
         level=logging.DEBUG,
         include_func=True,

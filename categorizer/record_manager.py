@@ -28,6 +28,7 @@ class RecordManager:
         self.records = []
         self.debug = debug
         self.logger = logger
+        
         self.total=None
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
@@ -38,11 +39,8 @@ class RecordManager:
         self.categorization_engine = CategorizationEngine(debug=True)
         self.cache={}
 
-        # Initialize MetaPatternManager if needed
-        meta_patterns_yaml_path = 'categorizer/bank_patterns.yaml'
-        self.mpm = MetaPatternManager(meta_patterns_yaml_path)
+        self.mpm=None
 
-       # self._debug("Initialization finished")
 
     def fill_from_cache_using_keywords(self, record):
         keyword = record.keyword
@@ -66,8 +64,10 @@ class RecordManager:
         logger.debug(f"Categorizing record.id: {record.record_id}, record.text {record.text}" )
 
         if use_cache:
+           
             self.fill_from_cache_using_keywords(record)
-
+       
+    
         if not record.ready:
             self.categorization_engine.categorize_record(record, use_metapattern=use_metapattern, use_keyword=use_keyword)
             self.cache_results(record)
@@ -75,6 +75,12 @@ class RecordManager:
 
         logger.debug(f"record dict: {record.to_dict()}")
     
+    def load_metapatterns(self,meta_patterns_yaml_path):
+        # Initialize MetaPatternManager if needed
+        if meta_patterns_yaml_path:
+            self.mpm = MetaPatternManager(meta_patterns_yaml_path)
+        else:
+            self.mpm=None
 
 
     @log_indent
@@ -152,6 +158,11 @@ class RecordManager:
         failures = 0
         processed = 0
 
+        if self.mpm is not None:
+            use_metapattern=True
+        else: 
+            use_metapattern=False
+
         # --- BATCHED PATH ---
         if batch_size:
             for offset in range(0, total, batch_size):
@@ -163,8 +174,8 @@ class RecordManager:
                         execr.submit(
                             self.categorize_a_record,
                             rec,
-                            False,  # use_metapattern
-                            True,   # use_keyword
+                            use_metapattern,  # use_metapattern
+                            True,           # use_keyword
                             True    # use_cache
                         ): rec
                         for rec in batch
@@ -211,7 +222,7 @@ class RecordManager:
                 try:
                     self.categorize_a_record(
                         rec,
-                        use_metapattern=False,
+                        use_metapattern=use_metapattern,
                         use_keyword=True,
                         use_cache=True
                     )
@@ -251,19 +262,19 @@ class RecordManager:
 
 
 
-    @log_indent
-    def categorize_a_record(self, record, use_metapattern=False, use_keyword=False, use_cache=False):
-        logger.debug(f"Categorizing record.id: {record.record_id}, record.text {record.text}" )
+    # @log_indent
+    # def categorize_a_record(self, record, use_metapattern=False, use_keyword=False, use_cache=False):
+    #     logger.debug(f"Categorizing record.id: {record.record_id}, record.text {record.text}" )
 
-        if use_cache:
-            self.fill_from_cache_using_keywords(record)
+    #     if use_cache:
+    #         self.fill_from_cache_using_keywords(record)
 
-        if not record.ready:
-            self.categorization_engine.categorize_record(record, use_metapattern=use_metapattern, use_keyword=use_keyword)
-            self.cache_results(record)
+    #     if not record.ready:
+    #         self.categorization_engine.categorize_record(record, use_metapattern=use_metapattern, use_keyword=use_keyword)
+    #         self.cache_results(record)
 
 
-        logger.debug(f"record dict: {record.to_dict()}")
+    #     logger.debug(f"record dict: {record.to_dict()}")
 
     
     def get_records_dataframe(self):
@@ -293,9 +304,11 @@ def main():
     from indented_logger import setup_logging, log_indent
   
     setup_logging(level=logging.DEBUG, include_func=True)
+
+   
     
     rm = RecordManager(debug=True)
-
+    
     import yaml
 
     sample_records_path = "categorizer/sample_records.yaml"
@@ -307,9 +320,11 @@ def main():
     # Extract records and convert to a DataFrame
     records = data.get('records', [])
     df = pd.DataFrame(records)
-
+    
     # Load records into RecordManager
+    rm.load_metapatterns(meta_patterns_yaml_path='categorizer/bank_patterns.yaml')
     rm.load_records(df, categories_yaml_path='categorizer/categories.yaml')
+    
     
     # Categorize records
     t0=time()
@@ -318,11 +333,11 @@ def main():
     reporter = LogReporter()
     # reporter=None
     
-    # result_df = rm.categorize_records(reporter=reporter)
-    result_df = rm.categorize_records(batch_size=14, reporter=reporter)
+    result_df = rm.categorize_records(reporter=reporter)
+    # result_df = rm.categorize_records(batch_size=14, reporter=reporter)
     
     t1=time()
-
+    
     # Print the resulting DataFrame
     print("Categorization results:")
     print(result_df)

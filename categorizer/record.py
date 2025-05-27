@@ -99,30 +99,9 @@ class Record:
                 return True
         return False
 
-    def categorize_with_metapattern(self):
-        if self.metapatterns and self.metapatterns.get("auto_categorization_patterns"):
-            self._debug(f"Inside categorize_with_metapattern")
+   
 
-            classification_patterns = self.metapatterns["auto_categorization_patterns"]
-            categorization_result = self.categorization_engine.categorize_record_with_meta_pattern(
-                self.text, classification_patterns
-            )
-
-            matched_pattern = categorization_result.matched_pattern
-            self._debug(f"Matched pattern: {matched_pattern}")
-
-            if categorization_result.success:
-                self.select_lvl_category(1, matched_pattern['lvl1'], classified_by="meta_pattern")
-                self.generate_merged_category_dict()
-                self.rationale = "metapattern"
-                self.refiner_output = "n"
-                self.ready = True
-
-                for level in range(2, self.depth + 1):
-                    lvl_key = f'lvl{level}'
-                    if lvl_key in matched_pattern:
-                        self.select_lvl_category(level, matched_pattern[lvl_key], classified_by="meta_pattern")
-
+    
     def is_level_valid(self, level):
         return 1 <= level <= self.depth
 

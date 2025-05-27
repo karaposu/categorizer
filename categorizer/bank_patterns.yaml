@@ -1,27 +1,7 @@
+# bank_patterns.yaml
 meta_patterns:
-  # add language section , it will change "Açıklama"
   QNB Finansbank Enpara:
-    
-    cleaning_patterns:
-      - pattern: "\\d+\\.\\d+ USD"
-        replacement: ""
-      - pattern: ", işlem kuru \\d+\\.\\d+ TL"
-        replacement: ""
-      - pattern: "Encard Harcaması,"
-        replacement: ""
-    string_identifier_extraction_patterns:
-      - pattern: 'Giden Transfer, [^,]+,'  # Matches 'Giden Transfer'
-      - pattern: 'Gelen Transfer, [^,]+,'  # Matches 'Gelen Transfer'
-      - pattern: 'Encard Harcaması, ([^,]+?)(?=\d+\.\d+ [A-Z]{3}|,|$)'  # Improved to handle line breaks and end of string
-      - pattern: 'Ödeme, ([^,]+)-'  # Matches 'Ödeme'
-      - pattern: 'Para Çekme, ([^,]+),'  # Matches 'Para Çekme'
-      - pattern: 'Masraf/Ücret, ([^,]+),'  # Matches 'Masraf/Ücret'
-      - pattern: 'Diğer, ([^\n]+)$'  # Matches 'Diğer' till the end or newline
-      - pattern: '[^,]+'
     auto_categorization_patterns:
-#      - pattern: "Bireysel Ödeme"
-#        lvl1: "Outgoing P2P Transfers"
-#        lvl2: "Outgoing Money"
       - pattern: "Gelen Transfer"
         lvl1: "Incoming P2P Transfers"
         lvl2: "Incoming Money"
@@ -39,39 +19,7 @@ meta_patterns:
         lvl2: "Cash Withdrawal"
 
   garanti:
-    record_start_sign:
-      'Tarih'
-    date_format:
-      '%d/%m/%Y'
-
-    amount_format:
-      'float'
-    column_name_mappings:
-      - org: "Açıklama"
-        maps_to: "text"
-      - org: "Tutar"
-        maps_to: "raw_amount"
-      - org: "Bakiye"
-        maps_to: "balance"
-      - org: "Tarih"
-        maps_to: "date"
-    cleaning_patterns:
-      - pattern: "(MOBIL-FAST)-\\d+"
-        replacement: "\\1"
-      - pattern: "(K\\.Kartı Ödeme) \\d{4} \\*{4} \\*{4} \\d{4}"
-        replacement: "\\1"
-      - pattern: "(Mobil DÖVİZ SATIŞ).*"
-        replacement: "\\1"
-
-    string_identifier_extraction_patterns:
-      - pattern: 'Giden Transfer, [^,]+,'  # Matches 'Giden Transfer'
-      - pattern: 'Gelen Transfer, [^,]+,'  # Matches 'Gelen Transfer'
-      - pattern: 'Encard Harcaması, ([^,]+?)(?=\d+\.\d+ [A-Z]{3}|,|$)'  # Improved to handle line breaks and end of string
-      - pattern: 'Ödeme, ([^,]+)-'  # Matches 'Ödeme'
-      - pattern: 'Para Çekme, ([^,]+),'  # Matches 'Para Çekme'
-      - pattern: 'Masraf/Ücret, ([^,]+),'  # Matches 'Masraf/Ücret'
-      - pattern: 'Diğer, ([^\n]+)$'  # Matches 'Diğer' till the end or newline
-      - pattern: '[^,]+'
+  
     auto_categorization_patterns:
       - pattern: "Bireysel Ödeme"
         lvl1: "Outgoing P2P Transfers"
@@ -94,41 +42,7 @@ meta_patterns:
 
 
   ziraat:
-    record_start_sign:
-      'Tarih'
-    record_stop_sign:
-        'NaN'
-    date_format:
-      '%d.%m.%Y'
-    amount_format:
-      'float'
-    column_name_mappings:
-      - org: "Açıklama"
-        maps_to: "text"
-      - org: "İşlem Tutarı"
-        maps_to: "raw_amount"
-      - org: "Bakiye"
-        maps_to: "balance"
-      - org: "Tarih"
-        maps_to: "date"
-    cleaning_patterns:
-#      - pattern: "İŞYERİ:\\s*([^\\s]+)(?=\\s*MUTABAKAT:|$)"
-#        replacement: "\\1"
-#      - pattern: "İŞYERİ:\\s*([^\\s]+(?:\\s+[^\\s]+)*)"
-#        replacement: "\\1"
-
-      - pattern: ".*İŞYERİ:\\s*([^\\s]+(?:\\s+[^\\s]+)*)\\s+MUTABAKAT:.*"
-        replacement: "\\1"
-
-    string_identifier_extraction_patterns:
-      - pattern: 'Giden Transfer, [^,]+,'  # Matches 'Giden Transfer'
-      - pattern: 'Gelen Transfer, [^,]+,'  # Matches 'Gelen Transfer'
-      - pattern: 'Encard Harcaması, ([^,]+?)(?=\d+\.\d+ [A-Z]{3}|,|$)'  # Improved to handle line breaks and end of string
-      - pattern: 'Ödeme, ([^,]+)-'  # Matches 'Ödeme'
-      - pattern: 'Para Çekme, ([^,]+),'  # Matches 'Para Çekme'
-      - pattern: 'Masraf/Ücret, ([^,]+),'  # Matches 'Masraf/Ücret'
-      - pattern: 'Diğer, ([^\n]+)$'  # Matches 'Diğer' till the end or newline
-      - pattern: '[^,]+'
+   
     auto_categorization_patterns:
       - pattern: "Bireysel Ödeme"
         lvl1: "Outgoing P2P Transfers"

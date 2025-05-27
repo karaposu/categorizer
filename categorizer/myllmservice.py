@@ -3,17 +3,6 @@
 
 import logging
 
-# def get_module_logger():
-#     if __name__ == '__main__':
-#         module_name = __spec__.name
-#     else:
-#         module_name = __name__
-#     return logging.getLogger(module_name)
-#
-# logger = get_module_logger()
-
-
-
 # logger = logging.getLogger(__name__)
 import asyncio
 from llmservice.base_service import BaseLLMService
@@ -24,13 +13,11 @@ from typing import Optional, Union
 # add default model param to init.
 
 class MyLLMService(BaseLLMService):
-    def __init__(self, logger=None, max_concurrent_requests=5):
+    def __init__(self, logger=None, max_concurrent_requests=200):
         super().__init__(
-            # logger=logger,
             logger=logging.getLogger(__name__),
             default_model_name="gpt-4o-mini",
-            yaml_file_path='categorizer/prompts.yaml',
-            max_rpm=60,
+            max_rpm=500,
             max_concurrent_requests=max_concurrent_requests,
         )
         # No need for a semaphore here, it's handled in BaseLLMService
@@ -44,21 +31,29 @@ class MyLLMService(BaseLLMService):
                                request_id: Optional[Union[str, int]] = None) -> GenerationResult:
 
 
+        formatted_prompt = f"""Here is list of classes: {list_of_classes},
+                            and here is parent_category : {parent_category}
+                            and here is string record to be classified {record}
 
-        data_for_placeholders = {
-            'list_of_classes': list_of_classes,
-            'parent_category': parent_category,  # Using the merged string
-            'string_record_to_be_classified': record,
-        }
-
-
-        order = ["list_of_classes", "parent_category", "string_record_to_be_classified", "category_task_description"]
-
-        unformatted_prompt = self.generation_engine.craft_prompt(data_for_placeholders, order)
-
+                            Task Description:
+                            Identify the Category: Determine which of the categories the string belongs to.
+                            Extra Information - Helpers:  There might be additional information under each subcategory labeled as 'helpers'. These helpers include descs for the taxonomy,  but
+                            should be considered as extra information and not directly involved in the classification task
+                            Instructions:
+                            Given the string record, first identify the category of the given string using given category list,  (your final answer shouldnt include words like "likely").
+                            Use the 'Helpers' section for additional context.  And also at the end explain your reasoning in a very short way. 
+                            Make sure category is selected from given categories and matches 100%
+                            Examples:
+                            Record: "Jumper Cable"
+                            lvl1: interconnectors
+                            
+                            Record: "STM32"
+                            lvl1: microcontrollers
+                             """
+    
         generation_request = GenerationRequest(
-            data_for_placeholders=data_for_placeholders,
-            unformatted_prompt=unformatted_prompt,
+           
+            formatted_prompt=formatted_prompt,
             model="gpt-4o",
             output_type="str",
             operation_name="categorize_with_parent",
@@ -74,15 +69,27 @@ class MyLLMService(BaseLLMService):
                                record: str,
                                list_of_classes,
                                request_id: Optional[Union[str, int]] = None) -> GenerationResult:
-        data_for_placeholders = {
-            'list_of_classes': list_of_classes,
+        
+        formatted_prompt = f"""Here is list of classes: {list_of_classes},
 
-            'string_record_to_be_classified': record,
-        }
+                            and here is string record to be classified {record}
 
-        order = ["list_of_classes",  "string_record_to_be_classified", "category_task_description"]
+                            Task Description:
+                            Identify the Category: Determine which of the categories the string belongs to.
+                            Extra Information - Helpers:  There might be additional information under each subcategory labeled as 'helpers'. These helpers include descs for the taxonomy,  but
+                            should be considered as extra information and not directly involved in the classification task
+                            Instructions:
+                            Given the string record, first identify the category of the given string using given category list,  (your final answer shouldnt include words like "likely").
+                            Use the 'Helpers' section for additional context.  And also at the end explain your reasoning in a very short way. 
+                            Make sure category is selected from given categories and matches 100%
+                            Examples:
+                            Record: "Jumper Cable"
+                            lvl1: interconnectors
+                            
+                            Record: "STM32"
+                            lvl1: microcontrollers
+                             """
 
-        unformatted_prompt = self.generation_engine.craft_prompt(data_for_placeholders, order)
 
         pipeline_config = [
             {
@@ -91,61 +98,22 @@ class MyLLMService(BaseLLMService):
                     'semantic_element_for_extraction': 'pure category'
                 }
             }
-            # {
-            #     'type': 'ConvertToDict',
-            #     'params': {}
-            # },
-            # {
-            #     'type': 'ExtractValue',
-            #     'params': {'key': 'answer'}  # Extract the 'answer' key from the dictionary
-            # }
         ]
 
         generation_request = GenerationRequest(
-            data_for_placeholders=data_for_placeholders,
-            unformatted_prompt=unformatted_prompt,
+            formatted_prompt=formatted_prompt,
             model="gpt-4o-mini",
             output_type="str",
-            # use_string2dict=False,
             operation_name="categorize_simple",
             pipeline_config= pipeline_config,
             request_id=request_id
         )
 
-        # self.logger.info("now will enter execute_generation...(myllmservice)")
-
-        # for i in range(3):
-
         generation_result = self.execute_generation(generation_request)
 
-        # self.logger.info("came back to llmservice...(myllmservice)")
-            # if generation_result.
-
+    
         return generation_result
 
-
-
-
-    async def translate_to_russian_async(self, input_paragraph: str, request_id: Optional[Union[str, int]] = None) -> GenerationResult:
-        # Concurrency control is handled in BaseLLMService
-        data_for_placeholders = {'input_paragraph': input_paragraph}
-        order = ["input_paragraph", "translate_to_russian"]
-
-        unformatted_prompt = self.generation_engine.craft_prompt(data_for_placeholders, order)
-
-        generation_request = GenerationRequest(
-            data_for_placeholders=data_for_placeholders,
-            unformatted_prompt=unformatted_prompt,
-            model="gpt-4o-mini",
-            output_type="str",
-
-            operation_name="translate_to_russian",
-            request_id=request_id
-        )
-
-        # Execute the generation asynchronously
-        generation_result = await self.execute_generation_async(generation_request)
-        return generation_result
 
 
 def main():

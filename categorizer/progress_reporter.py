@@ -52,14 +52,15 @@ class LogReporter(ProgressReporter):
 
 
     def update_status(self, status: str) -> None:
-
+        self.logger.info(f"[Reporter] Status: {status}")
         if status == "started":
             self.start_ts = datetime.now(timezone.utc)
+            self.logger.info(f"[Reporter] start time: { self.start_ts}")
            
         elif status == "completed":
             self.finished_ts = datetime.now(timezone.utc)
            
-        self.logger.info(f"[Reporter] Status: {status}")
+        # self.logger.info(f"[Reporter] Status: {status}")
 
    
     def update_total(self, total: int) -> None:
