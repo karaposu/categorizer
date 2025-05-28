@@ -244,6 +244,25 @@ class CategorizationEngine:
                 lvl_num = int(key[3:])
                 record.select_lvl_category(lvl_num, value,
                                            classified_by="metapattern")
+                
+    async def categorize_lvl_by_lvl_async(self, record):
+        """Async wrapper that calls the LLM service’s async method."""
+        for level in range(1, record.depth + 1):
+            ok, merged = self.prepare_category_documentation(record, level)
+            if not ok:
+                record.select_lvl_category(level, "cant_determined")
+                break
+
+            gen = await self.myllmservice.categorize_simple_async(record.text, merged)
+            if not gen.success or not record.validate_proposed_category_and_hierarchy(gen.content, level):
+                record.select_lvl_category(level, "cant_determined")
+                break
+
+            record.select_lvl_category(level, gen.content)
+            record.fill_rationale(level, gen.raw_content)
+            record.fill_refiner_output(level, gen.content)
+
+        record.ready = True
 
     
 def main():

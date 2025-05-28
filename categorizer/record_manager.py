@@ -11,9 +11,9 @@ from indented_logger import setup_logging, log_indent
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from categorizer.progress_reporter import ProgressReporter, LogReporter
+import asyncio
 
-
-from typing import Optional
+from typing import Optional,List
 from time import time
 from datetime import datetime
 
@@ -21,6 +21,14 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 #python -m categorizer.record_manager
+
+STATUS_INITIALIZED           = "initialized"
+STATUS_METAPATTERN_SEARCHING = "metapattern_searching"
+STATUS_METAPATTERN_DONE      = "metapattern_searched"
+STATUS_KEYWORD_MATCHING      = "keyword_matching"
+STATUS_KEYWORD_DONE          = "keyword_matched"
+STATUS_LLM_RUNNING           = "categorizing"          # long phase
+STATUS_COMPLETED             = "completed"
 
 
 class RecordManager:
@@ -298,6 +306,175 @@ class RecordManager:
                 return True
         return False
     
+
+
+    
+    def categorize_records_pipeline(
+        self,
+        *,
+        keyword_threads: int = 16,
+        llm_concurrency: int = 20,
+        reporter: Optional[ProgressReporter] = None,
+        threadpool_keywords: bool = True           # True → use the thread-pool helper
+    ) -> pd.DataFrame:
+        """
+        End-to-end categorization in three phases:
+
+            1. Meta-pattern (sync, ultra-fast)
+            2. Keyword / DB   (optional thread pool)
+            3. LLM (async, long-running; detailed ETA)
+
+        Only the LLM phase reports percentage/ETA; the first two phases
+        just flip status markers.
+        """
+        # ---------- early exit ----------
+        self.total      = len(self.records)
+        self.processed  = 0
+        self.failures   = 0
+        self.start_ts   = datetime.now(timezone.utc)
+
+        if reporter:
+            reporter.update_status(STATUS_INITIALIZED)
+
+        if self.total == 0:
+            if reporter:
+                reporter.update_status(STATUS_COMPLETED)
+            return self.get_records_dataframe()
+
+        # ---------- Phase 1 : Meta-pattern ----------
+        self._phase1_meta(reporter)     # uses STATUS_METAPATTERN_* internally
+
+        # ---------- Phase 2 : Keyword / DB ----------
+        pending = [r for r in self.records if not r.ready]
+        if pending:
+            if threadpool_keywords:
+                self._phase2_keywords_threadpool(pending, reporter, max_threads=keyword_threads)
+            else:
+                self._phase2_keywords_simple(pending, reporter)
+
+        # ---------- Phase 3 : LLM (async) ----------
+        still_pending = [r for r in self.records if not r.ready]
+        if still_pending:
+            if reporter:
+                reporter.update_status(STATUS_LLM_RUNNING)
+                # initialise counters so _tick works correctly
+                self.processed = self.total - len(still_pending)
+                reporter.update_processed_count(self.processed)
+                reporter.update_percentage(self.processed / self.total * 100)
+
+            asyncio.run(self._phase3_llm_async(still_pending, reporter, llm_concurrency))
+
+        # ---------- finished ----------
+        if reporter:
+            reporter.update_status(STATUS_COMPLETED)
+            reporter.update_processed_count(self.total)
+            reporter.update_percentage(100.0)
+            reporter.update_remaining_time(0.0)
+
+        return self.get_records_dataframe()
+
+
+       
+    
+
+    def _tick(self, reporter: ProgressReporter):
+        """Call this after EACH LLM result."""
+        self.processed += 1
+        pct = self.processed / self.total * 100
+        eta = reporter.find_remaining_time(self.start_ts,
+                                            self.total,
+                                            self.processed) or 0
+
+        reporter.update_processed_count(self.processed)
+        reporter.update_failed_count(self.failures)
+        reporter.update_percentage(pct)
+        reporter.update_remaining_time(eta)
+
+
+    def _phase1_meta(self, reporter: Optional[ProgressReporter]) -> None:
+        """
+        Phase 1: check all records against meta-patterns (sync, lightning-fast).
+        Only update the reporter’s status — no per-record progress.
+        """
+        if reporter:
+            reporter.update_status(STATUS_METAPATTERN_SEARCHING)
+
+        for rec in self.records:
+            # meta-pattern pass sets rec.ready if it matches
+            self.categorization_engine.categorize_with_metapattern(rec)
+
+        if reporter:
+            reporter.update_status(STATUS_METAPATTERN_DONE)
+
+
+    def _phase2_keywords_simple(
+        self,
+        pending: List[Record],
+        reporter: Optional[ProgressReporter] = None
+    ) -> None:
+        """
+        Phase-2 keyword pass, **sequential**.
+        Good for < ~1 000 records or when DB latency is negligible.
+        """
+        if not pending:
+            return
+
+        if reporter:
+            reporter.update_status(STATUS_KEYWORD_MATCHING)
+
+        for rec in pending:
+            self.categorization_engine.categorize_with_auto_trigger_keyword(rec)
+
+        if reporter:
+            reporter.update_status(STATUS_KEYWORD_DONE)
+
+
+    async def _phase3_llm_async(self, pending, reporter):
+        sem = asyncio.Semaphore(100)
+        async def classify(rec):
+            async with sem:
+                try:
+                    await self.engine.categorize_lvl_by_lvl_async(rec)
+                except Exception:
+                    self.failures += 1
+                finally:
+                    if reporter:
+                        self._tick(reporter)
+        await asyncio.gather(*(classify(r) for r in pending))
+
+    # -----------------------------------------------------------------
+
+    
+    def _phase2_keywords_threadpool(
+        self,
+        pending: List[Record],
+        reporter: Optional[ProgressReporter] = None,
+        max_threads: int = 16
+    ) -> None:
+        """
+        Phase-2 keyword pass, **threaded** with ThreadPoolExecutor**.
+        Use when keyword look-ups involve blocking I/O (DB/network) and you
+        want to overlap that latency.
+        """
+        if not pending:
+            return
+
+        if reporter:
+            reporter.update_status(STATUS_KEYWORD_MATCHING)
+
+        def _worker(rec: Record):
+            self.categorization_engine.categorize_with_auto_trigger_keyword(rec)
+
+        pool_size = min(max_threads, len(pending))
+        with ThreadPoolExecutor(max_workers=pool_size) as pool:
+            futures = [pool.submit(_worker, rec) for rec in pending]
+            for fut in as_completed(futures):
+                fut.result()            # propagate any exception
+
+        if reporter:
+            reporter.update_status(STATUS_KEYWORD_DONE)
+
+        
    
 
 def main():
